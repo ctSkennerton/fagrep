@@ -1819,7 +1819,7 @@ main (int argc, char **argv)
   keys = NULL;
   keycc = 0;
   with_filenames = 0;
-  eolbyte = '\n';
+  eolbyte = '>';
   filename_mask = ~0;
 
   max_count = TYPE_MAXIMUM (off_t);
