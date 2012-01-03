@@ -21,10 +21,10 @@ AM_CFLAGS = $(WARN_CFLAGS) $(WERROR_CFLAGS)
 # Tell the linker to omit references to unused shared libraries.
 AM_LDFLAGS = $(IGNORE_UNUSED_LIBRARIES_CFLAGS)
 
-bin_PROGRAMS = grep egrep fgrep
-grep_SOURCES  = grep.c
-egrep_SOURCES = egrep.c
-fgrep_SOURCES = fgrep.c
+bin_PROGRAMS = fagrep faegrep fafgrep
+fagrep_SOURCES  = grep.c
+faegrep_SOURCES = egrep.c
+fafgrep_SOURCES = fgrep.c
 noinst_HEADERS = grep.h dfa.h kwset.h search.h system.h mbsupport.h
 
 noinst_LIBRARIES = libgrep.a
