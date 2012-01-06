@@ -59,6 +59,7 @@ ChangeLog
 Makefile
 Makefile.in
 TAGS
+/fagrep/*
 !/gnulib-tests/Makefile.am
 !/lib/Makefile.am
 !/lib/colorize-posix.c

@@ -801,6 +801,9 @@ print_line_middle (const char *beg, const char *lim,
                   cur = mid;
                   mid = NULL;
                 }
+              
+              /* Hack to get it into fasta format.     */
+              printf(">");
               fwrite (cur, sizeof (char), b - cur, stdout);
             }
 
@@ -878,7 +881,16 @@ prline (char const *beg, char const *lim, int sep)
     }
 
   if (!only_matching && lim > beg)
-    fwrite (beg, 1, lim - beg, stdout);
+  {
+      /* Hack to get it into fasta format.  Don't print if we are colouring - that is handled elsewere
+       * and dont print if the resulting buffer length doesn't equal zero - seems only to happen when·
+       * the invert option is set for the first record printed   */
+      if (!color_option && (lim - beg - 1 != 0)) 
+      {
+          printf(">");
+      }
+      fwrite (beg, 1, lim - beg, stdout);
+  }
 
   if (ferror (stdout))
     error (0, errno, _("writing output"));
