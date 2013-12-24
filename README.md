@@ -8,23 +8,28 @@ up their hands.
 
 ## Usage
 for printing fasta records from fasta formatted files:
+```
 grep --fasta ...
-
+```
 for printing fastq record from fastq formatted files:
+```
 grep --fastq ...
-
+```
 without the fasta/q options this version of grep should (I hope) perform
 identically to regular GNU grep.
 
 ## Current known WORKING options
+```
 --color
 -c
 -l
 -n
 -h/-H
-
+```
 ## Current known NOT WORKING options
+```
 -v
+```
 
 ## Options that may not make sense without line orientated output
 Grep can prefix lines with a variety of things such as the line number,
