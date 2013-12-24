@@ -1,5 +1,5 @@
 /* dosbuf.c
-   Copyright (C) 1992, 1997-2002, 2004-2012 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1997-2002, 2004-2013 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -175,7 +175,7 @@ dossified_pos (off_t byteno)
 
   /* Optimization: usually the file will be scanned sequentially.
      So in most cases, this byte position will be found in the
-     table near the previous one, as recorded in `out_map_idx'.  */
+     table near the previous one, as recorded in 'out_map_idx'.  */
   pos_lo = dos_pos_map[out_map_idx-1].pos;
   pos_hi = dos_pos_map[out_map_idx].pos;
 
@@ -184,8 +184,8 @@ dossified_pos (off_t byteno)
   if (byteno >= pos_hi)
     {
       out_map_idx++;
-      while (out_map_idx < dos_pos_map_used &&
-             byteno >= dos_pos_map[out_map_idx].pos)
+      while (out_map_idx < dos_pos_map_used
+             && byteno >= dos_pos_map[out_map_idx].pos)
         out_map_idx++;
     }
 

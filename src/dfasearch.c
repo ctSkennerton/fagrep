@@ -1,5 +1,5 @@
 /* dfasearch.c - searching subroutines using dfa and regex for grep.
-   Copyright 1992, 1998, 2000, 2007, 2009-2012 Free Software Foundation, Inc.
+   Copyright 1992, 1998, 2000, 2007, 2009-2013 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 /* Written August 1992 by Mike Haertel. */
 
 #include <config.h>
+#include "intprops.h"
 #include "search.h"
 #include "dfa.h"
 
@@ -71,14 +72,15 @@ dfawarn (char const *mesg)
 /* Number of compiled fixed strings known to exactly match the regexp.
    If kwsexec returns < kwset_exact_matches, then we don't need to
    call the regexp matcher at all. */
-static int kwset_exact_matches;
+static size_t kwset_exact_matches;
 
 static char const *
 kwsincr_case (const char *must)
 {
   size_t n = strlen (must);
+  mb_len_map_t *map = NULL;
   const char *buf = (match_icase && MB_CUR_MAX > 1
-                     ? mbtolower (must, &n)
+                     ? mbtolower (must, &n, &map)
                      : must);
   return kwsincr (kwset, buf, n);
 }
@@ -211,16 +213,20 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
 {
   char const *buflim, *beg, *end, *match, *best_match, *mb_start;
   char eol = eolbyte;
-  int backref, start, len, best_len;
+  int backref;
+  regoff_t start;
+  size_t len, best_len;
   struct kwsmatch kwsm;
   size_t i, ret_val;
+  mb_len_map_t *map = NULL;
+
   if (MB_CUR_MAX > 1)
     {
       if (match_icase)
         {
           /* mbtolower adds a NUL byte at the end.  That will provide
              space for the sentinel byte dfaexec may add.  */
-          char *case_buf = mbtolower (buf, &size);
+          char *case_buf = mbtolower (buf, &size, &map);
           if (start_ptr)
             start_ptr = case_buf + (start_ptr - buf);
           buf = case_buf;
@@ -271,7 +277,9 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
               /* No good fixed strings; start with DFA. */
               char const *next_beg = dfaexec (dfa, beg, (char *) buflim,
                                               0, NULL, &backref);
-              if (next_beg == NULL)
+              /* If there's no match, or if we've matched the sentinel,
+                 we're done.  */
+              if (next_beg == NULL || next_beg == buflim)
                 break;
               /* Narrow down to the line we've found. */
               beg = next_beg;
@@ -294,6 +302,11 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
           end = buflim;
         }
 
+      /* If the "line" is longer than the maximum regexp offset,
+         die as if we've run out of memory.  */
+      if (TYPE_MAXIMUM (regoff_t) < end - buf - 1)
+        xalloc_die ();
+
       /* If we've made it to this point, this means DFA has seen
          a probable match, and we need to run it through Regex. */
       best_match = end;
@@ -301,10 +314,13 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
       for (i = 0; i < pcount; i++)
         {
           patterns[i].regexbuf.not_eol = 0;
-          if (0 <= (start = re_search (&(patterns[i].regexbuf),
-                                       buf, end - buf - 1,
-                                       beg - buf, end - beg - 1,
-                                       &(patterns[i].regs))))
+          start = re_search (&(patterns[i].regexbuf),
+                             buf, end - buf - 1,
+                             beg - buf, end - beg - 1,
+                             &(patterns[i].regs));
+          if (start < -1)
+            xalloc_die ();
+          else if (0 <= start)
             {
               len = patterns[i].regs.end[0] - start;
               match = buf + start;
@@ -321,7 +337,7 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
                 }
               /* If -w, check if the match aligns with word boundaries.
                  We do this iteratively because:
-                 (a) the line may contain more than one occurence of the
+                 (a) the line may contain more than one occurrence of the
                  pattern, and
                  (b) Several alternatives in the pattern might be valid at a
                  given point, and we may need to consider a shorter one to
@@ -329,6 +345,7 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
               if (match_words)
                 while (match <= best_match)
                   {
+                    regoff_t shorter_len = 0;
                     if ((match == buf || !WCHAR ((unsigned char) match[-1]))
                         && (start + len == end - buf - 1
                             || !WCHAR ((unsigned char) match[len])))
@@ -338,11 +355,16 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
                         /* Try a shorter length anchored at the same place. */
                         --len;
                         patterns[i].regexbuf.not_eol = 1;
-                        len = re_match (&(patterns[i].regexbuf),
-                                        buf, match + len - beg, match - buf,
-                                        &(patterns[i].regs));
+                        shorter_len = re_match (&(patterns[i].regexbuf),
+                                                buf, match + len - beg,
+                                                match - buf,
+                                                &(patterns[i].regs));
+                        if (shorter_len < -1)
+                          xalloc_die ();
                       }
-                    if (len <= 0)
+                    if (0 < shorter_len)
+                      len = shorter_len;
+                    else
                       {
                         /* Try looking further on. */
                         if (match == end - 1)
@@ -354,7 +376,11 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
                                            match - buf, end - match - 1,
                                            &(patterns[i].regs));
                         if (start < 0)
-                          break;
+                          {
+                            if (start < -1)
+                              xalloc_die ();
+                            break;
+                          }
                         len = patterns[i].regs.end[0] - start;
                         match = buf + start;
                       }
@@ -386,14 +412,14 @@ EGexecute (char const *buf, size_t size, size_t *match_size,
     } /* for (beg = end ..) */
 
  failure:
-  ret_val = -1;
-  goto out;
+  return -1;
 
  success:
   len = end - beg;
- success_in_len:
+ success_in_len:;
+  size_t off = beg - buf;
+  mb_case_map_apply (map, &off, &len);
   *match_size = len;
-  ret_val = beg - buf;
- out:
+  ret_val = off;
   return ret_val;
 }

@@ -1,7 +1,7 @@
 #! /bin/sh
 # Test for backreferences and other things.
 #
-# Copyright (C) 2001, 2006, 2009-2012 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2006, 2009-2013 Free Software Foundation, Inc.
 #
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -18,8 +18,8 @@ if test $? -ne 0 ; then
         failures=1
 fi
 
-# hit hard with the `Bond' tests
-# For now, remove the `?' in the last parentheses, so that new glibc can do it.  --Stepan
+# hit hard with the 'Bond' tests
+# For now, remove the '?' in the last parentheses, so that new glibc can do it.  --Stepan
 echo "civic" | grep -E -e '^(.?)(.?)(.?)(.?)(.?)(.?)(.?)(.?)(.).?\9\8\7\6\5\4\3\2\1$' > /dev/null 2>&1
 if test $? -ne 0 ; then
         echo "Options: Bond, test #2 failed"

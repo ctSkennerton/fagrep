@@ -1,5 +1,5 @@
 /* kwsearch.c - searching subroutines using kwset for grep.
-   Copyright 1992, 1998, 2000, 2007, 2009-2012 Free Software Foundation, Inc.
+   Copyright 1992, 1998, 2000, 2007, 2009-2013 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -34,8 +34,9 @@ Fcompile (char const *pattern, size_t size)
 {
   char const *err;
   size_t psize = size;
+  mb_len_map_t *map = NULL;
   char const *pat = (match_icase && MB_CUR_MAX > 1
-                     ? mbtolower (pattern, &psize)
+                     ? mbtolower (pattern, &psize, &map)
                      : pattern);
 
   kwsinit (&kwset);
@@ -83,11 +84,13 @@ Fexecute (char const *buf, size_t size, size_t *match_size,
   char eol = eolbyte;
   struct kwsmatch kwsmatch;
   size_t ret_val;
+  mb_len_map_t *map = NULL;
+
   if (MB_CUR_MAX > 1)
     {
       if (match_icase)
         {
-          char *case_buf = mbtolower (buf, &size);
+          char *case_buf = mbtolower (buf, &size, &map);
           if (start_ptr)
             start_ptr = case_buf + (start_ptr - buf);
           buf = case_buf;
@@ -108,11 +111,9 @@ Fexecute (char const *buf, size_t size, size_t *match_size,
           mbstate_t s;
           memset (&s, 0, sizeof s);
           size_t mb_len = mbrlen (mb_start, (buf + size) - (beg + offset), &s);
-          if (mb_len == (size_t) -2)
+          if (mb_len == (size_t) -2 || mb_len == (size_t) -1)
             goto failure;
-          beg = mb_start;
-          if (mb_len != (size_t) -1)
-            beg += mb_len - 1;
+          beg = mb_start + mb_len - 1;
           continue;
         }
       beg += offset;
@@ -151,8 +152,7 @@ Fexecute (char const *buf, size_t size, size_t *match_size,
     } /* for (beg in buf) */
 
  failure:
-  ret_val = -1;
-  goto out;
+  return -1;
 
  success:
   if ((end = memchr (beg + len, eol, (buf + size) - (beg + len))) != NULL)
@@ -162,9 +162,11 @@ Fexecute (char const *buf, size_t size, size_t *match_size,
   while (buf < beg && beg[-1] != eol)
     --beg;
   len = end - beg;
- success_in_beg_and_len:
+ success_in_beg_and_len:;
+  size_t off = beg - buf;
+  mb_case_map_apply (map, &off, &len);
+
   *match_size = len;
-  ret_val = beg - buf;
- out:
+  ret_val = off;
   return ret_val;
 }

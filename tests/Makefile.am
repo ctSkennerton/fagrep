@@ -1,5 +1,5 @@
 ## Process this file with automake to create Makefile.in
-# Copyright 1997-1998, 2005-2012 Free Software Foundation, Inc.
+# Copyright 1997-1998, 2005-2013 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,20 +24,22 @@ LDADD = ../lib/libgreputils.a $(LIBINTL) ../lib/libgreputils.a
 
 # Remove this definition once the failing test passes.
 XFAIL_TESTS = \
-  word-delim-multibyte \
-  grep-dir
+  word-delim-multibyte
 
 # Equivalence classes are only supported when using the system
 # matcher (which means only with glibc).
 if USE_INCLUDED_REGEX
 XFAIL_TESTS += equiv-classes
 endif
-XFAIL_TESTS += turkish-I
 
 TESTS =						\
   backref					\
   backref-multibyte-slow			\
   backref-word					\
+  backslash-s-and-repetition-operators		\
+  backslash-s-vs-invalid-multitype		\
+  big-hole					\
+  big-match					\
   bogus-wctob					\
   bre						\
   case-fold-backref				\
@@ -46,10 +48,13 @@ TESTS =						\
   case-fold-char-range				\
   case-fold-char-type				\
   char-class-multibyte				\
+  char-class-multibyte2				\
+  dfa-coverage					\
   dfa-heap-overrun				\
   dfaexec-multibyte				\
   empty						\
-  equiv-classes                                 \
+  epipe						\
+  equiv-classes					\
   ere						\
   euc-mb					\
   fedora					\
@@ -61,25 +66,36 @@ TESTS =						\
   grep-dir					\
   help-version					\
   ignore-mmap					\
-  in-eq-out-infloop                             \
+  in-eq-out-infloop				\
   include-exclude				\
-  inconsistent-range                            \
+  inconsistent-range				\
+  invalid-multibyte-infloop			\
   khadafy					\
+  long-line-vs-2GiB-read			\
   max-count-vs-context				\
+  multibyte-white-space				\
+  empty-line-mb					\
   unibyte-bracket-expr				\
   high-bit-range				\
   options					\
   pcre						\
   pcre-abort					\
+  pcre-invalid-utf8-input			\
+  pcre-utf8					\
   pcre-z					\
   prefix-of-multibyte				\
   r-dot						\
+  repetition-overflow				\
   reversed-range-endpoints			\
+  skip-device					\
   sjis-mb					\
   spencer1					\
   spencer1-locale				\
   status					\
+  surrogate-pair				\
+  symlink					\
   turkish-I					\
+  turkish-I-without-dot				\
   warn-char-classes				\
   word-delim-multibyte				\
   word-multi-file				\
@@ -124,9 +140,9 @@ TESTS_ENVIRONMENT =				\
   fi;							\
 						\
   export_with_values				\
-  VERSION='$(VERSION)'                          \
-  LOCALE_FR='$(LOCALE_FR)'                      \
-  LOCALE_FR_UTF8='$(LOCALE_FR_UTF8)'            \
+  VERSION='$(VERSION)'				\
+  LOCALE_FR='$(LOCALE_FR)'			\
+  LOCALE_FR_UTF8='$(LOCALE_FR_UTF8)'		\
   AWK=$(AWK)					\
   GREP_OPTIONS=''				\
   LC_ALL=C					\

@@ -1,6 +1,6 @@
 # Process this file with automake to create Makefile.in
 #
-# Copyright 1997-1998, 2005-2012 Free Software Foundation, Inc.
+# Copyright 1997-1998, 2005-2013 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-AUTOMAKE_OPTIONS = gnu 1.10
-ACLOCAL_AMFLAGS = -I m4
+AUTOMAKE_OPTIONS = gnu 1.12
 
 SUBDIRS = po lib doc src tests gnulib-tests
 
 EXTRA_DIST =		\
   ChangeLog-2009	\
-  Makefile.boot		\
   README		\
   README-alpha		\
-  README-boot		\
   TODO			\
   cfg.mk
+
+# Shortcut target to make it easier to run expensive tests.
+.PHONY: check-expensive
+check-expensive:
+	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
 
 # Run syntax-check rules before creating a distribution tarball.
 .PHONY: run-syntax-check
@@ -44,6 +46,7 @@ gen_start_date = 2009-11-27
 gen-ChangeLog:
 	$(AM_V_GEN)if test -d .git; then				\
 	  $(top_srcdir)/build-aux/gitlog-to-changelog			\
+	    --amend=$(srcdir)/build-aux/git-log-fix			\
 	    --since=$(gen_start_date) > $(distdir)/cl-t;		\
 	  rm -f $(distdir)/ChangeLog;					\
 	  mv $(distdir)/cl-t $(distdir)/ChangeLog;			\

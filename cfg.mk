@@ -1,5 +1,5 @@
 # Customize maint.mk                           -*- makefile -*-
-# Copyright (C) 2009-2012 Free Software Foundation, Inc.
+# Copyright (C) 2009-2013 Free Software Foundation, Inc.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,9 +31,29 @@ bootstrap-tools = autoconf,automake,gnulib
 # Now that we have better tests, make this the default.
 export VERBOSE = yes
 
-old_NEWS_hash = 25ce2f420ad2d0f4ec68b23237691054
+# Comparing tarball sizes compressed using different xz presets, we see
+# that -6e adds only 60 bytes to the size of the tarball, yet reduces
+# (from -9) the decompression memory requirement from 64 MiB to 9 MiB.
+# Don't be tempted by -5e, since -6 and -5 use the same dictionary size.
+# $ for i in {4,5,6,7,8,9}{e,}; do \
+#     (n=$(xz -$i < grep-2.11.tar|wc -c);echo $n $i) & done |sort -nr
+# 1236632 4
+# 1162564 5
+# 1140988 4e
+# 1139620 6
+# 1139480 7
+# 1139480 8
+# 1139480 9
+# 1129552 5e
+# 1127616 6e
+# 1127556 7e
+# 1127556 8e
+# 1127556 9e
+export XZ_OPT = -6e
 
-# Many m4 macros names once began with `jm_'.
+old_NEWS_hash = 6b8be8ef5a7ad6246be2a5eda617962e
+
+# Many m4 macros names once began with 'jm_'.
 # Make sure that none are inadvertently reintroduced.
 sc_prohibit_jm_in_m4:
 	@grep -nE 'jm_[A-Z]'						\
@@ -68,3 +88,5 @@ exclude_file_name_regexp--sc_prohibit_xalloc_without_use = ^src/kwset\.c$$
 exclude_file_name_regexp--sc_prohibit_tab_based_indentation = \
   (Makefile|\.(am|mk)$$|^gl/lib/.*\.c\.diff$$)
 exclude_file_name_regexp--sc_space_tab = ^gl/lib/.*\.c\.diff$$
+exclude_file_name_regexp--sc_error_message_uppercase = ^src/dfa\.c$$
+exclude_file_name_regexp--sc_prohibit_strncpy = ^src/dfa\.c$$

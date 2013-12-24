@@ -1,4 +1,4 @@
-  Copyright (C) 1992, 1997-2002, 2004-2012 Free Software Foundation, Inc.
+  Copyright (C) 1992, 1997-2002, 2004-2013 Free Software Foundation, Inc.
 
   Copying and distribution of this file, with or without modification,
   are permitted in any medium without royalty provided the copyright
@@ -19,6 +19,8 @@ Bruno Haible               <haible@ilog.fr>
 Christian Groessler        <cpg@aladdin.de>
 Corinna Vinschen           <vinschen@redhat.com>
 Dagobert Michelsen         <dam@opencsw.org>
+Daisuke GOTO               <gotoh@m-design.com>
+Dave Reisner               <d@falconindy.com>
 David Clissold             <cliss@austin.ibm.com>
 David J MacKenzie          <djm@catapult.va.pubnix.com>
 David O'Brien              <obrien@freebsd.org>
@@ -65,6 +67,7 @@ Martin Rex                 <martin.rex@sap-ag.de>
 Michael Aichlmayr          <mikla@nx.com>
 Mike Frysinger             <vapier@gentoo.org>
 Miles Bader                <miles@ccs.mt.nec.co.jp>
+Mirraz Mirraz              <mirraz1@rambler.ru>
 Nelson H. F. Beebe         <beebe@math.utah.edu>
 Olaf Kirch                 <okir@ns.lst.de>
 Paolo Bonzini              <bonzini@gnu.org>
@@ -84,6 +87,7 @@ Shannon Hill               <hill@synnet.com>
 Sotiris Vassilopoulos      <Sotiris.Vassilopoulos@betatech.gr>
 Standish Parsley           <adsspamtrap01@yahoo.com>
 Stewart Levin              <stew@sep.stanford.edu>
+Strahinja Kustudic         <kustodian@gmail.com>
 Sven Joachim               <svenjoac@gmx.de>
 Sydoruk Stepan             <step@unitex.kiev.ua>
 Tapani Tarvainen           <tt@mit.jyu.fi>
@@ -98,3 +102,4 @@ Volker Borchert            <bt@teknon.de>
 Wichert Akkerman           <wichert@cistron.nl>
 William Bader              <william@nscs.fast.net>
 Wolfgang Schludi           <schludi@syscomp.de>
+Zoltan Herczeg             <hzmester@freemail.hu>

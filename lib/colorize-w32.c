@@ -1,5 +1,5 @@
 /* Output colorization on MS-Windows.
-   Copyright 2011-2012 Free Software Foundation, Inc.
+   Copyright 2011-2013 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -173,7 +173,7 @@ print_start_colorize (char const *sgr_start, char const *sgr_seq)
 /* Clear to the end of the current line with the default attribute.
    This is needed for reasons similar to those that require the "EL to
    Right after SGR" operation on Posix platforms: if we don't do this,
-   setting the `mt', `ms', or `mc' capabilities to use a non-default
+   setting the 'mt', 'ms', or 'mc' capabilities to use a non-default
    background color spills that color to the empty space at the end of
    the last screen line in a match whose line spans multiple screen
    lines.  */

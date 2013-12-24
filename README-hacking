@@ -18,7 +18,7 @@ Valgrind <http://valgrind.org/> is also highly recommended, if
 Valgrind supports your architecture. See also README-valgrind.
 
 While building from a just-cloned source tree may require installing a
-few prerequisites, later, a plain `git pull && make' should be sufficient.
+few prerequisites, later, a plain 'git pull && make' should be sufficient.
 
 * First GIT checkout
 
@@ -37,6 +37,12 @@ The next step is to get and check other files needed to build,
 which are extracted from other source packages:
 
         $ ./bootstrap
+
+To use the most-recent gnulib (as opposed to the gnulib version that
+the package last synchronized to), do this next:
+
+        $ git submodule foreach git pull origin master
+        $ git commit -m 'build: update gnulib submodule to latest' gnulib
 
 And there you are!  Just
 
@@ -61,7 +67,7 @@ reporting address of this package, and not to that of gnulib, even
 if the problem seems to originate in a gnulib-provided file.
 -----
 
-Copyright (C) 2002-2012 Free Software Foundation, Inc.
+Copyright (C) 2002-2013 Free Software Foundation, Inc.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
