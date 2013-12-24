@@ -288,7 +288,9 @@ enum
   LABEL_OPTION,
   EXCLUDE_DIRECTORY_OPTION,
   GROUP_SEPARATOR_OPTION,
-  MMAP_OPTION
+  MMAP_OPTION,
+  FASTA_OPTION,
+  FASTQ_OPTION
 };
 
 /* Long options equivalences. */
@@ -346,6 +348,8 @@ static struct option const long_options[] =
   {"version", no_argument, NULL, 'V'},
   {"with-filename", no_argument, NULL, 'H'},
   {"word-regexp", no_argument, NULL, 'w'},
+  {"fasta", no_argument, NULL, FASTA_OPTION},
+  {"fastq", no_argument, NULL, FASTQ_OPTION},
   {0, 0, 0, 0}
 };
 
@@ -354,6 +358,8 @@ int match_icase;
 int match_words;
 int match_lines;
 unsigned char eolbyte;
+int fasta_input = 0;
+int fastq_input = 0;
 
 /* For error messages. */
 /* The input file name, or (if standard input) "-" or a --label argument.  */
@@ -866,9 +872,6 @@ print_line_middle (const char *beg, const char *lim,
                   cur = mid;
                   mid = NULL;
                 }
-              
-              /* Hack to get it into fasta format.     */
-              printf(">");
               fwrite (cur, sizeof (char), b - cur, stdout);
             }
 
@@ -941,24 +944,21 @@ prline (char const *beg, char const *lim, int sep)
         beg = print_line_middle (beg, lim, line_color, match_color);
 
       if (!only_matching && *line_color)
-        {
-          /* This code is exercised at least when grep is invoked like this:
-             echo k| GREP_COLORS='sl=01;32' src/grep k --color=always  */
-          beg = print_line_tail (beg, lim, line_color);
-        }
+        beg = print_line_tail (beg, lim, line_color);
     }
 
-  if (!only_matching && lim > beg)
-  {
-      /* Hack to get it into fasta format.  Don't print if we are colouring - that is handled elsewere
-       * and dont print if the resulting buffer length doesn't equal zero - seems only to happen when·
-       * the invert option is set for the first record printed   */
-      if (!color_option && (lim - beg - 1 != 0)) 
-      {
-          printf(">");
-      }
-      fwrite (beg, 1, lim - beg, stdout);
-  }
+  if (!only_matching && lim > beg) 
+    {
+      //if (! fasta_input)
+        fwrite (beg, 1, lim - beg, stdout);
+      /*else
+        {
+          if(!out_invert)
+            fwrite(">", 1, 1, stdout);
+          
+          fwrite (beg, 1, lim - beg - 1, stdout);
+        }*/
+    }
 
   if (ferror (stdout))
     {
@@ -1033,7 +1033,10 @@ prtext (char const *beg, char const *lim, intmax_t *nlinesp)
       while (p < beg)
         {
           char const *nl = memchr (p, eol, beg - p);
-          nl++;
+          if(fasta_input)
+            --p;
+          else
+            ++nl;
           prline (p, nl, SEP_CHAR_REJECTED);
           p = nl;
         }
@@ -1056,7 +1059,15 @@ prtext (char const *beg, char const *lim, intmax_t *nlinesp)
       after_last_match = bufoffset - (buflim - p);
     }
   else if (!out_quiet)
-    prline (beg, lim, SEP_CHAR_SELECTED);
+    {
+      if(fasta_input)
+        {
+          --beg;
+          --lim;
+        }
+        
+      prline (beg, lim, SEP_CHAR_SELECTED);
+    }
 
   pending = out_quiet ? 0 : out_after;
   used = 1;
@@ -1897,7 +1908,7 @@ main (int argc, char **argv)
   keys = NULL;
   keycc = 0;
   with_filenames = 0;
-  eolbyte = '>';
+  eolbyte = '\n';
   filename_mask = ~0;
 
   max_count = INTMAX_MAX;
@@ -2197,6 +2208,15 @@ main (int argc, char **argv)
 
       case MMAP_OPTION:
         error (0, 0, _("the --mmap option has been a no-op since 2010"));
+        break;
+      case FASTA_OPTION:
+        fasta_input = 1;
+        eolbyte = '>';
+        break;
+
+      case FASTQ_OPTION:
+        fastq_input = 1;
+        error(0,0, _("Sorry, fastq not currently supported"));
         break;
 
       case 0:
