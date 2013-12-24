@@ -948,17 +948,7 @@ prline (char const *beg, char const *lim, int sep)
     }
 
   if (!only_matching && lim > beg) 
-    {
-      //if (! fasta_input)
-        fwrite (beg, 1, lim - beg, stdout);
-      /*else
-        {
-          if(!out_invert)
-            fwrite(">", 1, 1, stdout);
-          
-          fwrite (beg, 1, lim - beg - 1, stdout);
-        }*/
-    }
+    fwrite (beg, 1, lim - beg, stdout);
 
   if (ferror (stdout))
     {
@@ -1011,9 +1001,43 @@ prtext (char const *beg, char const *lim, intmax_t *nlinesp)
 
   if (!out_quiet)
     {
-      /* Deal with leading context crap. */
-
       bp = lastout ? lastout : bufbeg;
+      if(fasta_input)
+        {
+          /*find the beginning of the record*/
+          while(p > bp && p[0] != '>') --p;
+          /*find the end of the record*/
+          while(lim < buflim - 1 && lim[0] != '>') ++lim;
+        }
+      if(fastq_input)
+        {
+          /*find the beginning of the record*/
+          while(p > bp)
+            { 
+              if(p[0] == '@')
+                {
+                  if(p - 2 <= bp)
+                    /*can't go back any further therefore must be start of record*/
+                    break;
+                  
+                  if (p[-1] == '\n' && p[-2] != '+')
+                    /*@ symbol at beginning of line but not the first in the quality */
+                    break;
+                }
+              --p;
+            }
+          
+          /*find the end of the record*/
+          lim = p;
+          int newline_count;
+          for(newline_count = 0; newline_count <4; ++newline_count)
+            {
+               while(lim < buflim - 1 && lim[0] != '\n') ++lim;
+               ++lim;
+            }
+        }
+
+      /* Deal with leading context crap. */
       for (i = 0; i < out_before; ++i)
         if (p > bp)
           do
@@ -1033,10 +1057,7 @@ prtext (char const *beg, char const *lim, intmax_t *nlinesp)
       while (p < beg)
         {
           char const *nl = memchr (p, eol, beg - p);
-          if(fasta_input)
-            --p;
-          else
-            ++nl;
+          ++nl;
           prline (p, nl, SEP_CHAR_REJECTED);
           p = nl;
         }
@@ -1059,15 +1080,7 @@ prtext (char const *beg, char const *lim, intmax_t *nlinesp)
       after_last_match = bufoffset - (buflim - p);
     }
   else if (!out_quiet)
-    {
-      if(fasta_input)
-        {
-          --beg;
-          --lim;
-        }
-        
-      prline (beg, lim, SEP_CHAR_SELECTED);
-    }
+    prline (beg, lim, SEP_CHAR_SELECTED);
 
   pending = out_quiet ? 0 : out_after;
   used = 1;
@@ -1232,8 +1245,38 @@ grep (int fd, struct stat const *st)
       beg[-1] = eol;
       /* FIXME: use rawmemrchr if/when it exists, since we have ensured
          that this use of memrchr is guaranteed never to return NULL.  */
-      lim = memrchr (beg - 1, eol, buflim - beg + 1);
-      ++lim;
+      if(fasta_input)
+        {
+          lim = memrchr (beg - 1, '>', buflim - beg + 1);
+        }
+      else if(fastq_input)
+        {
+          char const * bp = lastout ? lastout : bufbeg;
+          lim = memrchr (beg - 1, '@', buflim - beg + 1);
+          /* find the beginning of the record
+           * since the fastq format does not have a unique separator
+           * the final '@' may not point to the beginning of a record*/
+          while(lim > bp)
+            { 
+              if(lim[0] == '@')
+                {
+                  if(lim - 2 <= bp)
+                    /*can't go back any further therefore must be start of record*/
+                    break;
+                  
+                  if (lim[-1] == '\n' && lim[-2] != '+')
+                    /*@ symbol at beginning of line but not the first in the quality */
+                    break;
+                }
+              --lim;
+            }
+        }
+      else
+        {
+          lim = memrchr (beg - 1, eol, buflim - beg + 1);
+          ++lim;
+        }
+
       beg[-1] = oldc;
       if (lim == beg)
         lim = beg - residue;
@@ -2211,12 +2254,10 @@ main (int argc, char **argv)
         break;
       case FASTA_OPTION:
         fasta_input = 1;
-        eolbyte = '>';
         break;
 
       case FASTQ_OPTION:
         fastq_input = 1;
-        error(0,0, _("Sorry, fastq not currently supported"));
         break;
 
       case 0:
