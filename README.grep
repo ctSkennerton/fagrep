@@ -4,11 +4,6 @@
   are permitted in any medium without royalty provided the copyright
   notice and this notice are preserved.
 
-This is a simple hack of the GNU grep program so that instead of using newline 
-characters for the bounds of the search, it uses the ">" delimeter for a fasta file.
-Because of this it is as fast as grep and has all the pitfalls.  Note that currently 
-fagrep does not work with fastq files, since their syntax is more complicated (and stupid).
-
 GNU grep, the "fastest grep in the west" (we hope).  All
 bugs reported in previous releases have been fixed.  Many exciting new
 bugs have probably been introduced in this revision.
