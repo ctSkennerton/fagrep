@@ -1002,40 +1002,6 @@ prtext (char const *beg, char const *lim, intmax_t *nlinesp)
   if (!out_quiet)
     {
       bp = lastout ? lastout : bufbeg;
-      if(fasta_input)
-        {
-          /*find the beginning of the record*/
-          while(p > bp && p[0] != '>') --p;
-          /*find the end of the record*/
-          while(lim < buflim - 1 && lim[0] != '>') ++lim;
-        }
-      if(fastq_input)
-        {
-          /*find the beginning of the record*/
-          while(p > bp)
-            { 
-              if(p[0] == '@')
-                {
-                  if(p - 2 <= bp)
-                    /*can't go back any further therefore must be start of record*/
-                    break;
-                  
-                  if (p[-1] == '\n' && p[-2] != '+')
-                    /*@ symbol at beginning of line but not the first in the quality */
-                    break;
-                }
-              --p;
-            }
-          
-          /*find the end of the record*/
-          lim = p;
-          int newline_count;
-          for(newline_count = 0; newline_count <4; ++newline_count)
-            {
-               while(lim < buflim - 1 && lim[0] != '\n') ++lim;
-               ++lim;
-            }
-        }
 
       /* Deal with leading context crap. */
       for (i = 0; i < out_before; ++i)
@@ -1153,6 +1119,42 @@ grepbuf (char const *beg, char const *lim)
       /* Avoid matching the empty line at the end of the buffer. */
       if (b == lim)
         break;
+      if(fasta_input)
+        {
+          /*find the beginning of the record*/
+          while(b > p && b[0] != '>') --b;
+          /*find the end of the record*/
+          while(endp < lim && endp[0] != '>') ++endp;
+        }
+      if(fastq_input)
+        {
+          /*find the beginning of the record*/
+          while(b >= beg)
+            { 
+              if(b[0] == '@')
+                {
+                  if(b - 2 <= beg)
+                    /*can't go back any further therefore must be start of record*/
+                    break;
+
+                  if (b[-1] == '\n' && b[-2] != '+')
+                    /*@ symbol at beginning of line but not the first in the quality */
+                    break;
+                }
+            --b;
+          }
+        endp = b;
+        int newline_count;
+        for(newline_count = 0; newline_count <4; ++newline_count)
+          {
+            /*find the end of the record*/
+            while(endp < lim && endp[0] != '\n') 
+              ++endp;
+            
+            ++endp;
+          }
+      }
+
       if (!out_invert)
         {
           prtext (b, endp, NULL);
@@ -1327,7 +1329,12 @@ grep (int fd, struct stat const *st)
     {
       *buflim++ = eol;
       if (outleft)
-        nlines += grepbuf (bufbeg + save - residue, buflim);
+        {
+          if(fasta_input | fastq_input)
+            --buflim;
+
+          nlines += grepbuf (bufbeg + save - residue, buflim);
+        }
       if (pending)
         prpending (buflim);
     }
